@@ -1,12 +1,13 @@
 package fix.client.api.settings;
 
-import fix.client.api.models.CreateInitiatorRequest;
+import fix.client.api.enums.FixConnectionType;
+import fix.client.api.models.CreateFixSessionRequest;
 import quickfix.SessionID;
 import quickfix.SessionSettings;
 
 public class FixSessionSettingsFactory {
 
-    public SessionSettings createInitiatorSettings(CreateInitiatorRequest request) {
+    public SessionSettings createInitiatorSettings(CreateFixSessionRequest request) {
         var sessionID = new SessionID(
                 "FIX.4.4",
                 request.senderCompID(),
@@ -29,7 +30,7 @@ public class FixSessionSettingsFactory {
                 .setStringField(FixSessionSettingsField.USE_DATA_DICTIONARY, "N")
                 .setStringField(FixSessionSettingsField.CONTINUE_INIT_ON_ERROR, "N")
                 .setLongField(FixSessionSettingsField.HEART_BT_INT, 3)
-                .setLongField(FixSessionSettingsField.RECONNECT_INTERVAL, 0)
+                .setLongField(FixSessionSettingsField.RECONNECT_INTERVAL, 10)
                 .setStringField(FixSessionSettingsField.FILE_STORE_PATH, "log")
                 .setStringField(FixSessionSettingsField.FILE_LOG_PATH, "log");
     }

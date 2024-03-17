@@ -1,5 +1,6 @@
 package fix.client.api.settings;
 
+import fix.client.api.enums.FixConnectionType;
 import quickfix.SessionID;
 import quickfix.SessionSettings;
 

@@ -1,4 +1,4 @@
-package fix.client.api.settings;
+package fix.client.api.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
