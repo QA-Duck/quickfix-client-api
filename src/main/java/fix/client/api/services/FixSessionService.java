@@ -36,8 +36,8 @@ public class FixSessionService {
         fixInitiatorMap.put(fixSessionInfo.getUuid(), initiator);
     }
 
-    public Map<String, FixSessionInfo> selectSession() {
-        return sessions;
+    public Collection<FixSessionInfo> selectSession() {
+        return sessions.values();
     }
 
     public FixSessionInfo selectSession(String connectionID) {

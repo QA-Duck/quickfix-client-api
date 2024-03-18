@@ -5,18 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import fix.client.api.enums.SessionStartStatus;
 import lombok.Data;
 
+import static fix.client.api.enums.SessionStartStatus.BROKEN;
+
 @Data
 public class FixSessionInfo {
 
-    @JsonProperty("connection-uuid")
+    @JsonProperty("connection_uuid")
     private final String uuid;
 
-    @JsonProperty("connection-name")
+    @JsonProperty("connection_name")
     private final String name;
 
-    @JsonProperty("connection-status")
-    private FixConnectionStatus connectionStatus = new FixConnectionStatus(
-            "On hold",
-            SessionStartStatus.BROKEN
-    );
+    @JsonProperty("connection_status")
+    private FixConnectionStatus connectionStatus =
+            new FixConnectionStatus("On hold", BROKEN);
 }
