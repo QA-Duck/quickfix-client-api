@@ -5,6 +5,7 @@ import fix.client.api.enums.SessionStartStatus;
 import fix.client.api.models.FixConnectionStatus;
 import fix.client.api.models.FixSessionInfo;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
 import quickfix.*;
 import reactor.core.publisher.Flux;
@@ -14,15 +15,13 @@ import java.util.function.Supplier;
 
 import static fix.client.api.enums.FixConnectionStatuses.failed;
 
+@Slf4j
 public class FixInitiator {
 
     private final FixSender application;
     private final FixSessionInfo fixSessionInfo;
     private final SessionSettings sessionSettings;
     private final SocketInitiator socketInitiator;
-
-    @Setter
-    private FluxSink<ServerSentEvent<String>> fluxSink;
 
     public FixInitiator(
             FixSessionInfo fixSessionInfo,
@@ -49,9 +48,11 @@ public class FixInitiator {
 
     public FixSessionInfo connect() {
         try {
+            log.info("Try to start connect");
             socketInitiator.start();
             fixSessionInfo.setConnectionStatus(FixConnectionStatuses.IN_PROGRESS);
         } catch (Exception e) {
+            log.error("Connect is failed {}", e.getMessage());
             fixSessionInfo.setConnectionStatus(failed(e.getMessage()));
         }
         return fixSessionInfo;
@@ -62,7 +63,11 @@ public class FixInitiator {
         return fixSessionInfo;
     }
 
-    public Supplier<Flux<ServerSentEvent<String>>> getFlux() {
-        return application.getFlux();
+    public void subscribe(FluxSink<ServerSentEvent<String>> sink) {
+        application.subscribe(sink);
+    }
+
+    public void unsubscribe(FluxSink<ServerSentEvent<String>> sink) {
+        application.unsubscribe(sink);
     }
 }

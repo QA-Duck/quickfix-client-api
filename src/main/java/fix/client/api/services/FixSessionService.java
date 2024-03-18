@@ -52,8 +52,7 @@ public class FixSessionService {
         return fixInitiatorMap.get(connectionID).disconnect();
     }
 
-    public Supplier<Flux<ServerSentEvent<String>>> getFlux(String sessionUUID) {
-        return fixInitiatorMap.get(sessionUUID).getFlux();
+    public void subscribe(String connectionID,  FluxSink<ServerSentEvent<String>> sink) {
+        fixInitiatorMap.get(connectionID).subscribe(sink);
     }
-
 }

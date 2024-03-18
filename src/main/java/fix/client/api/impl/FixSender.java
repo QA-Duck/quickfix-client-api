@@ -15,22 +15,39 @@ import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Sinks;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static fix.client.api.enums.FixConnectionStatuses.failed;
 
 @Slf4j
 @RequiredArgsConstructor
-public class FixSender implements Application, SessionStateListener {
+public class FixSender implements Application{
+
+    private final Set<FluxSink<ServerSentEvent<String>>> subscribers = new HashSet<>();
 
     private final FixSessionInfo sessionInfo;
 
-    @Getter
-    private Sinks.Many<ServerSentEvent<String>> serverSentEventSink = Sinks
-            .many().replay().limit(Duration.ZERO);
+    public void subscribe(FluxSink<ServerSentEvent<String>> sink) {
+        subscribers.add(sink);
+    }
+
+    public void unsubscribe(FluxSink<ServerSentEvent<String>> sink) {
+        subscribers.remove(sink);
+    }
 
     @Override
-    public void onCreate(SessionID sessionID) { }
+    public void onCreate(SessionID sessionID) {
+        log.info("SESSION CREATE");
+        Session.lookupSession(sessionID).addStateListener(new SessionStateListener() {
+            @Override
+            public void onConnectException(Exception exception) {
+                catchMessage(exception.getMessage());
+                sessionInfo.setConnectionStatus(failed(exception.getMessage()));
+            }
+        });
+    }
 
     @Override
     public void onLogon(SessionID sessionID) {
@@ -43,20 +60,12 @@ public class FixSender implements Application, SessionStateListener {
     }
 
     @Override
-    public void fromAdmin(Message message, SessionID sessionID) throws
-            FieldNotFound,
-            IncorrectDataFormat,
-            IncorrectTagValue,
-            RejectLogon {
+    public void fromAdmin(Message message, SessionID sessionID) {
         catchMessage(message);
     }
 
     @Override
-    public void fromApp(Message message, SessionID sessionID) throws
-            FieldNotFound,
-            IncorrectDataFormat,
-            IncorrectTagValue,
-            UnsupportedMessageType {
+    public void fromApp(Message message, SessionID sessionID) {
         catchMessage(message);
     }
 
@@ -66,28 +75,24 @@ public class FixSender implements Application, SessionStateListener {
     }
 
     @Override
-    public void toApp(Message message, SessionID sessionId) throws DoNotSend {
+    public void toApp(Message message, SessionID sessionId) {
         catchMessage(message);
-    }
-
-    @Override
-    public void onConnectException(Exception exception) {
-        sessionInfo.setConnectionStatus(failed(exception.getMessage()));
-        serverSentEventSink
-                .tryEmitNext(ServerSentEvent.builder(exception.getMessage()).build())
-                .orThrow();
     }
 
     private void catchMessage(Message message) {
         String className = message.getClass().getSimpleName();
-        String messageText = message.toRawString().replace('\u0001', '|');
-        serverSentEventSink
-                .tryEmitNext(ServerSentEvent.builder(className+ " " + messageText).build())
-                .orThrow();
+        String messageRaw = message.toRawString().replace('\u0001', '|');
+        String messageText = className + " " + messageRaw;
+        log.info("catch message {}", messageText);
+        catchMessage(messageText);
     }
 
-    public Supplier<Flux<ServerSentEvent<String>>> getFlux() {
-        return () -> serverSentEventSink.asFlux();
+    private void catchMessage(String message) {
+        var sse = ServerSentEvent.builder(message).build();
+        log.info("catch message {}", message);
+        for (var sink : subscribers) {
+            sink.next(sse);
+        }
     }
 }
 

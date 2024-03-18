@@ -59,6 +59,6 @@ public class SessionManagerController {
 
     @GetMapping(path = "/{sessionUUID}/stream-flux", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> streamFlux(@PathVariable String sessionUUID) {
-        return Flux.from(fixSessionService.getFlux(sessionUUID).get()).publish();
+        return Flux.create(sink -> fixSessionService.subscribe(sessionUUID, sink));
     }
 }

@@ -1,0 +1,9 @@
+[
+  {
+    "uuid": "1",
+    "host": "localhost",
+    "port": 5001,
+    "sender_comp_id": "FIX_Client",
+    "target_comp_id": "Fix"
+  }
+]
