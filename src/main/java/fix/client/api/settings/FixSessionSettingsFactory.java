@@ -1,22 +1,22 @@
 package fix.client.api.settings;
 
 import fix.client.api.enums.FixConnectionType;
-import fix.client.api.models.CreateFixSessionRequest;
+import fix.client.api.models.properties.FixSessionConnectionProperties;
 import quickfix.SessionID;
 import quickfix.SessionSettings;
 
 public class FixSessionSettingsFactory {
 
-    public SessionSettings createInitiatorSettings(CreateFixSessionRequest request) {
+    public SessionSettings create(FixSessionConnectionProperties connectionProperties) {
         var sessionID = new SessionID(
                 "FIX.4.4",
-                request.senderCompID(),
-                request.targetCompID()
+                connectionProperties.senderCompID(),
+                connectionProperties.targetCompID()
         );
         return setDefaultParameters(new FixSessionSettingsBuilder())
                 .setConnectionType(FixConnectionType.INITIATOR)
-                .setStringField(FixSessionSettingsField.HOST, request.host())
-                .setLongField(sessionID, FixSessionSettingsField.PORT, request.port())
+                .setStringField(FixSessionSettingsField.HOST, connectionProperties.host())
+                .setLongField(sessionID, FixSessionSettingsField.PORT, connectionProperties.port())
                 .setStringField(sessionID, FixSessionSettingsField.SENDER_COMP_ID, sessionID.getSenderCompID())
                 .setStringField(sessionID, FixSessionSettingsField.TARGET_COMP_ID, sessionID.getTargetCompID())
                 .setStringField(sessionID, FixSessionSettingsField.BEGIN_STRING, sessionID.getBeginString())

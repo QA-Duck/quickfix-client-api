@@ -1,7 +1,5 @@
 package fix.client.api.enums;
 
-import fix.client.api.models.FixConnectionStatus;
-
 public class FixConnectionStatuses {
 
     public final static FixConnectionStatus IN_PROGRESS = new FixConnectionStatus(
