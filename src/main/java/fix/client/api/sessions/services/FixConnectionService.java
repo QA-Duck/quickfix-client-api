@@ -55,7 +55,7 @@ public class FixConnectionService {
         connections.put(
                 property.getID(),
                 new FixMessageStreamInitiator(
-                        connectionProperties.getConnection().createSettings(),
+                        connectionProperties.createSettings(),
                         new FixMessageStreamApplication(property.getID(), publisher)
                 )
         );

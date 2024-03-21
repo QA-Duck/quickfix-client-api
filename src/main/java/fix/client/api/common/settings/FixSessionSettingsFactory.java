@@ -2,22 +2,22 @@ package fix.client.api.common.settings;
 
 import fix.client.api.common.enums.FixConnectionType;
 import fix.client.api.common.enums.FixSessionSettingsField;
-import fix.client.api.sessions.models.FixSessionConnectionProperties;
+import fix.client.api.sessions.models.FixSessionProperties;
 import quickfix.SessionID;
 import quickfix.SessionSettings;
 
 public class FixSessionSettingsFactory {
 
-    public SessionSettings create(FixSessionConnectionProperties connectionProperties) {
+    public SessionSettings create(FixSessionProperties connectionProperties) {
         var sessionID = new SessionID(
                 "FIX.4.4",
-                connectionProperties.senderCompID(),
-                connectionProperties.targetCompID()
+                connectionProperties.getSenderCompID(),
+                connectionProperties.getTargetCompID()
         );
         return setDefaultParameters(new FixSessionSettingsBuilder())
                 .setConnectionType(FixConnectionType.INITIATOR)
-                .setStringField(FixSessionSettingsField.HOST, connectionProperties.host())
-                .setLongField(sessionID, FixSessionSettingsField.PORT, connectionProperties.port())
+                .setStringField(FixSessionSettingsField.HOST, connectionProperties.getHost())
+                .setLongField(sessionID, FixSessionSettingsField.PORT, connectionProperties.getPort())
                 .setStringField(sessionID, FixSessionSettingsField.SENDER_COMP_ID, sessionID.getSenderCompID())
                 .setStringField(sessionID, FixSessionSettingsField.TARGET_COMP_ID, sessionID.getTargetCompID())
                 .setStringField(sessionID, FixSessionSettingsField.BEGIN_STRING, sessionID.getBeginString())

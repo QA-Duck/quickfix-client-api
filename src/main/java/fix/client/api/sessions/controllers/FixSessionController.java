@@ -1,5 +1,6 @@
 package fix.client.api.sessions.controllers;
 
+import fix.client.api.sessions.models.FixSessionCreateRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import fix.client.api.sessions.models.FixSessionProperties;
@@ -30,8 +31,16 @@ public class FixSessionController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody FixSessionProperties request) {
-        return ResponseEntity.ok(fixConnectionService.create(request));
+    public ResponseEntity<?> create(@RequestBody FixSessionCreateRequest request) {
+        return ResponseEntity.ok(fixConnectionService.create(
+                new FixSessionProperties(
+                        request.name(),
+                        request.senderCompID(),
+                        request.targetCompID(),
+                        request.host(),
+                        request.port()
+                )
+        ));
     }
 
     @GetMapping("/select")
