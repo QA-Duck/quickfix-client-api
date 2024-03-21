@@ -1,6 +1,8 @@
 package fix.client.api.sessions.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import fix.client.api.common.enums.FixConnectionStatus;
 import fix.client.api.common.settings.FixSessionSettingsFactory;
 
 import quickfix.SessionSettings;
@@ -31,6 +33,9 @@ public class FixSessionProperties implements EntityWithID<String> {
 
         @JsonProperty("port")
         private final int port;
+
+        @Setter
+        private FixConnectionStatus status = FixConnectionStatus.CLOSE;
 
         @Override
         public String getID() {

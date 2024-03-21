@@ -48,20 +48,20 @@ public class FixSessionController {
         return ResponseEntity.ok(fixSessionMapRepository.select());
     }
 
-    @GetMapping("/select/{session_uuid}")
-    public ResponseEntity<?> select(@PathVariable String sessionUUID) {
-        return ResponseEntity.ok(fixSessionMapRepository.select(sessionUUID));
+    @GetMapping("/select/{id}")
+    public ResponseEntity<?> select(@PathVariable String id) {
+        return ResponseEntity.ok(fixSessionMapRepository.select(id));
     }
 
-    @GetMapping("/connect/{session_uuid}")
-    public ResponseEntity<?> connect(@PathVariable String sessionUUID) {
-        fixConnectionService.connect(sessionUUID);
+    @GetMapping("/connect/{id}")
+    public ResponseEntity<?> connect(@PathVariable String id) {
+        fixConnectionService.connect(id);
         return ResponseEntity.ok("ok");
     }
 
-    @GetMapping("/disconnect/{session_uuid}")
-    public ResponseEntity<?> disconnect(@PathVariable String sessionUUID) {
-        fixConnectionService.disconnect(sessionUUID);
+    @GetMapping("/disconnect/{id}")
+    public ResponseEntity<?> disconnect(@PathVariable String id) {
+        fixConnectionService.disconnect(id);
         return ResponseEntity.ok("ok");
     }
 }

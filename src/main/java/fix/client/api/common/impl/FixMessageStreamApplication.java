@@ -1,24 +1,20 @@
 package fix.client.api.common.impl;
 
-import fix.client.api.common.enums.FixSubscriberStatus;
 import fix.client.api.sessions.events.FixConnectionStatusUpdateEvent;
-import fix.client.api.subscriptions.events.FixSubscriptionEvent;
-import fix.client.api.subscriptions.events.SubscriptionCloseEvent;
-import fix.client.api.subscriptions.events.SubscriptionListenEvent;
 import fix.client.api.subscriptions.models.FixSessionSubscriber;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.codec.ServerSentEvent;
 import quickfix.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import static fix.client.api.common.enums.FixConnectionStatus.CLOSE;
-import static fix.client.api.common.enums.FixConnectionStatus.OPEN;
+import static fix.client.api.common.enums.FixConnectionStatus.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,12 +22,18 @@ public class FixMessageStreamApplication implements Application {
 
     private final String fixSessionID;
 
+    @Getter
     private final ApplicationEventPublisher eventPublisher;
 
     private final Set<FixSessionSubscriber> subscribers = new HashSet<>();
 
+    private final List<String> lastMessages = new ArrayList<>();
+
     public void addSubscriber(FixSessionSubscriber subscriber) {
         subscribers.add(subscriber);
+        if (!lastMessages.isEmpty()) {
+            lastMessages.forEach(this::pushMessage);
+        }
     }
 
     public void delSubscriber(String subscribeID) {
@@ -47,9 +49,18 @@ public class FixMessageStreamApplication implements Application {
         Session.lookupSession(sessionID).addStateListener(new SessionStateListener() {
             @Override
             public void onConnectException(Exception exception) {
-                var close = new FixConnectionStatusUpdateEvent(fixSessionID, CLOSE);
-                eventPublisher.publishEvent(close);
-                pushMessage(exception.getMessage());
+                if (!subscribers.isEmpty()) {
+                    pushMessage(exception.getMessage());
+                    pushMessage("The connection will be interrupted [check session configuration]");
+                    subscribers.forEach(subscriber -> {
+                        subscriber.getStream().complete();
+                    });
+                } else {
+                    lastMessages.add(exception.getMessage());
+                }
+                eventPublisher.publishEvent(
+                        new FixConnectionStatusUpdateEvent(fixSessionID, FAILED)
+                );
             }
         });
     }
@@ -62,8 +73,7 @@ public class FixMessageStreamApplication implements Application {
 
     @Override
     public void onLogout(SessionID sessionID) {
-        var close = new FixConnectionStatusUpdateEvent(fixSessionID, CLOSE);
-        eventPublisher.publishEvent(close);
+
     }
 
     @Override

@@ -4,5 +4,6 @@ public enum FixConnectionStatus {
     STARTING,
     FAILED,
     CLOSE,
-    OPEN
+    OPEN,
+    LOG_ON
 }
