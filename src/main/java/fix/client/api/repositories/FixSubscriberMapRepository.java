@@ -1,6 +1,6 @@
 package fix.client.api.repositories;
 
-import fix.client.api.models.properties.FixSessionSubscriber;
+import fix.client.api.subscriptions.models.FixSessionSubscriberProperties;
 
-public class FixSubscriberMapRepository extends BaseMapRepository<FixSessionSubscriber> {
+public class FixSubscriberMapRepository extends BaseMapRepository<FixSessionSubscriberProperties> {
 }

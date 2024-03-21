@@ -1,12 +1,11 @@
 package fix.client.api.repositories;
 
 
-import fix.client.api.models.properties.EntityWithID;
+import fix.client.api.sessions.models.EntityWithID;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 public abstract class BaseMapRepository<T extends EntityWithID<String>> {
     private final HashMap<String, T> storage = new HashMap<>();
