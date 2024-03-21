@@ -3,6 +3,8 @@ package fix.client.api.services;
 import fix.client.api.impl.FixMessageStreamApplication;
 import fix.client.api.impl.FixMessageStreamInitiator;
 import fix.client.api.models.properties.FixSessionConnectionProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -17,10 +19,13 @@ public class FixConnectionService {
             String sessionID,
             FixSessionConnectionProperties connectionProperties
     ) {
-        var settings = connectionProperties.createSettings();
-        var application = new FixMessageStreamApplication();
-        var initiator = new FixMessageStreamInitiator(settings, application);
-        connections.put(sessionID, initiator);
+        connections.put(
+                sessionID,
+                new FixMessageStreamInitiator(
+                        connectionProperties.createSettings(),
+                        new FixMessageStreamApplication()
+                )
+        );
     }
 
     public void delete(String sessionID) {

@@ -1,6 +1,7 @@
 package fix.client.api.enums;
 
-public enum SubscriptionStatus {
+public enum FixSubscriberStatus {
+    CREATED,
     LISTEN,
     CLOSE
 }

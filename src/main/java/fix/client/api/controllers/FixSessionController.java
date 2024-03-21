@@ -1,7 +1,6 @@
 package fix.client.api.controllers;
 
 import fix.client.api.models.properties.FixSessionDescriptionProperties;
-import fix.client.api.services.FixSessionDescriptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
