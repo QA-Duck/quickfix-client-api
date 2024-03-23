@@ -1,6 +1,5 @@
 package fix.client.api.sessions.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fix.client.api.common.enums.FixConnectionStatus;
 import fix.client.api.common.settings.FixSessionSettingsFactory;
@@ -10,6 +9,8 @@ import quickfix.SessionSettings;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.RequiredArgsConstructor;
+
+import static fix.client.api.common.enums.FixConnectionStatus.CREATED;
 
 
 @Getter
@@ -22,20 +23,12 @@ public class FixSessionProperties implements EntityWithID<String> {
         @JsonProperty("name")
         private final String name;
 
-        @JsonProperty("sender")
-        private final String senderCompID;
-
-        @JsonProperty("target")
-        private final String targetCompID;
-
-        @JsonProperty("host")
-        private final String host;
-
-        @JsonProperty("port")
-        private final int port;
+        @JsonProperty("connection")
+        private final FixConnectionProperties connection;
 
         @Setter
-        private FixConnectionStatus status = FixConnectionStatus.CLOSE;
+        @JsonProperty("status")
+        private FixConnectionStatus status = CREATED;
 
         @Override
         public String getID() {
@@ -48,6 +41,6 @@ public class FixSessionProperties implements EntityWithID<String> {
         }
 
         public SessionSettings createSettings() {
-                return new FixSessionSettingsFactory().create(this);
+                return new FixSessionSettingsFactory().create(this.getConnection());
         }
 }

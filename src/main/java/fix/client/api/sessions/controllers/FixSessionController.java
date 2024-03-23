@@ -1,5 +1,6 @@
 package fix.client.api.sessions.controllers;
 
+import fix.client.api.sessions.models.FixConnectionProperties;
 import fix.client.api.sessions.models.FixSessionCreateRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,10 +36,12 @@ public class FixSessionController {
         return ResponseEntity.ok(fixConnectionService.create(
                 new FixSessionProperties(
                         request.name(),
-                        request.senderCompID(),
-                        request.targetCompID(),
-                        request.host(),
-                        request.port()
+                        new FixConnectionProperties(
+                                request.senderCompID(),
+                                request.targetCompID(),
+                                request.host(),
+                                request.port()
+                        )
                 )
         ));
     }
