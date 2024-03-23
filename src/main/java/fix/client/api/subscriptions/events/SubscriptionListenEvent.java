@@ -14,4 +14,10 @@ public class SubscriptionListenEvent extends ApplicationEvent {
         super(subscriber);
         this.subscriber = subscriber;
     }
+
+    public String getSessionID() {
+        return subscriber
+                .getProperties()
+                .getSessionID();
+    }
 }

@@ -10,6 +10,8 @@ import static fix.client.api.common.enums.FixConnectionStatus.*;
 
 @Slf4j
 public class FixMessageStreamInitiator {
+
+    private boolean isActive = false;
     private final String sessionID;
     private final SocketInitiator socketInitiator;
     @Getter
@@ -48,16 +50,22 @@ public class FixMessageStreamInitiator {
     public void connect() {
         try {
             log.info("Try to start connect");
-            socketInitiator.start();
+            if (!isActive) {
+                socketInitiator.start();
+            }
+            isActive = true;
         } catch (Exception e) {
             log.error("Connect is failed {}", e.getMessage());
             fixMessageStreamApplication.getEventPublisher().publishEvent(
-                    new FixConnectionStatusUpdateEvent(sessionID, FAILED)
+                    new FixConnectionStatusUpdateEvent(sessionID, STOP_BY_SYSTEM)
             );
         }
     }
 
     public void disconnect() {
-        socketInitiator.stop();
+        if (isActive) {
+            socketInitiator.stop();
+        }
+        isActive = false;
     }
 }

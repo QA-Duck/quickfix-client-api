@@ -9,6 +9,7 @@ import fix.client.api.repositories.FixSessionMapRepository;
 import fix.client.api.subscriptions.events.SubscriptionCloseEvent;
 import fix.client.api.subscriptions.events.SubscriptionListenEvent;
 
+import fix.client.api.subscriptions.models.FixSessionSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -37,15 +38,7 @@ public class FixConnectionService {
         this.publisher = publisher;
     }
 
-    @EventListener
-    public void handleSubscribeEvent(SubscriptionListenEvent event) {
-        var sessionID = event.getSubscriber().getProperties().getSessionID();
-        log.info("Subscribe for {}", sessionID);
-        connections
-                .get(sessionID)
-                .getFixMessageStreamApplication()
-                .addSubscriber(event.getSubscriber());
-    }
+
 
     @EventListener
     public void handleUnsubscribeEvent(SubscriptionCloseEvent event) {
@@ -60,11 +53,11 @@ public class FixConnectionService {
     public void handleConnectionUpdateEvent(FixConnectionStatusUpdateEvent event) {
         log.info("Connection status was update {} for {}", event.getStatus(), event.getSessionID());
         var properties = repository.select(event.getSessionID());
-        if (event.getStatus().equals(FAILED)) {
+        if (event.statusIs(STOP_BY_SYSTEM)) {
             disconnect(event.getSessionID());
-            properties.setStatus(event.getStatus());
-            repository.update(properties);
         }
+        properties.setStatus(event.getStatus());
+        repository.update(properties);
     }
 
     public FixSessionProperties create(FixSessionProperties connectionProperties) {
@@ -81,23 +74,34 @@ public class FixConnectionService {
     }
 
     public void delete(String sessionID) {
-        disconnect(sessionID);
         connections.remove(sessionID);
+        disconnect(sessionID);
     }
 
     public void disconnect(String sessionID) {
-        if (repository.select(sessionID).getStatus() != CLOSE) {
-            publisher.publishEvent(
-                    new FixConnectionStatusUpdateEvent(sessionID, CLOSE)
-            );
-            connections.get(sessionID).disconnect();
-        }
+        connections
+                .get(sessionID)
+                .disconnect();
     }
 
     public void connect(String sessionID) {
+        connections
+                .get(sessionID)
+                .connect();
         publisher.publishEvent(
-                new FixConnectionStatusUpdateEvent(sessionID, STARTING)
+                new FixConnectionStatusUpdateEvent(sessionID, STARTING_BY_CLIENT)
         );
-        connections.get(sessionID).connect();
+    }
+
+    public FixConnectionStatus getStatus(String sessionID) {
+        return repository
+                .select(sessionID)
+                .getStatus();
+    }
+
+    public void addSubscriber(FixSessionSubscriber subscriber, String sessionID) {
+        connections.get(sessionID)
+                .getFixMessageStreamApplication()
+                .addSubscriber(subscriber);
     }
 }

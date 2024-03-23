@@ -31,9 +31,7 @@ public class FixMessageStreamApplication implements Application {
 
     public void addSubscriber(FixSessionSubscriber subscriber) {
         subscribers.add(subscriber);
-        if (!lastMessages.isEmpty()) {
-            lastMessages.forEach(this::pushMessage);
-        }
+        lastMessages.forEach(m -> pushMessage(subscriber, m));
     }
 
     public void delSubscriber(String subscribeID) {
@@ -49,17 +47,13 @@ public class FixMessageStreamApplication implements Application {
         Session.lookupSession(sessionID).addStateListener(new SessionStateListener() {
             @Override
             public void onConnectException(Exception exception) {
-                if (!subscribers.isEmpty()) {
-                    pushMessage(exception.getMessage());
-                    pushMessage("The connection will be interrupted [check session configuration]");
-                    subscribers.forEach(subscriber -> {
-                        subscriber.getStream().complete();
-                    });
-                } else {
-                    lastMessages.add(exception.getMessage());
-                }
+                var message = exception.getMessage();
+                lastMessages.add(message);
+                pushMessage(message);
+                pushMessage("The connection will be interrupted [check session configuration]");
+                subscribers.forEach(subscriber -> subscriber.getStream().complete());
                 eventPublisher.publishEvent(
-                        new FixConnectionStatusUpdateEvent(fixSessionID, FAILED)
+                        new FixConnectionStatusUpdateEvent(fixSessionID, STOP_BY_SYSTEM)
                 );
             }
         });
@@ -67,8 +61,7 @@ public class FixMessageStreamApplication implements Application {
 
     @Override
     public void onLogon(SessionID sessionID) {
-        var open = new FixConnectionStatusUpdateEvent(fixSessionID, OPEN);
-        eventPublisher.publishEvent(open);
+        eventPublisher.publishEvent(new FixConnectionStatusUpdateEvent(fixSessionID, OPEN));
     }
 
     @Override
@@ -96,7 +89,7 @@ public class FixMessageStreamApplication implements Application {
         pushMessage(message);
     }
 
-    public void pushMessage( Message message) {
+    public void pushMessage(Message message) {
         String className = message.getClass().getSimpleName();
         String messageRaw = message.toRawString().replace('\u0001', '|');
         String messageText = className + " " + messageRaw;
@@ -104,10 +97,12 @@ public class FixMessageStreamApplication implements Application {
     }
 
     public void pushMessage(String message) {
+        subscribers.forEach(s -> pushMessage(s, message));
+    }
+
+    public void pushMessage(FixSessionSubscriber subscriber, String message) {
         var sse = ServerSentEvent.builder(message).build();
-        subscribers.forEach(s -> {
-            s.getStream().next(sse);
-        });
+        subscriber.getStream().next(sse);
     }
 }
 

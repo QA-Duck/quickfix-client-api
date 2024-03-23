@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static fix.client.api.common.enums.FixConnectionStatus.STOP_BY_CLIENT;
+
 
 @Slf4j
 @RestController
@@ -64,7 +66,7 @@ public class FixSessionController {
 
     @GetMapping("/disconnect/{id}")
     public ResponseEntity<?> disconnect(@PathVariable String id) {
-        fixConnectionService.disconnect(id);
+        fixConnectionService.disconnect(id, STOP_BY_CLIENT);
         return ResponseEntity.ok("ok");
     }
 }
