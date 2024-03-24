@@ -6,12 +6,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import quickfix.*;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import static fix.client.api.common.enums.FixConnectionStatus.*;
 
 @Slf4j
 public class FixMessageStreamInitiator {
-
-    private boolean isActive = false;
     private final String sessionID;
     private final SocketInitiator socketInitiator;
     @Getter
@@ -49,23 +50,15 @@ public class FixMessageStreamInitiator {
 
     public void connect() {
         try {
-            log.info("Try to start connect");
-            if (!isActive) {
-                socketInitiator.start();
-            }
-            isActive = true;
+            socketInitiator.start();
         } catch (Exception e) {
             log.error("Connect is failed {}", e.getMessage());
-            fixMessageStreamApplication.getEventPublisher().publishEvent(
-                    new FixConnectionStatusUpdateEvent(sessionID, STOP_BY_SYSTEM)
-            );
         }
     }
 
     public void disconnect() {
-        if (isActive) {
-            socketInitiator.stop();
+        if (socketInitiator != null) {
+            socketInitiator.stop(true);
         }
-        isActive = false;
     }
 }

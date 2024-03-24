@@ -2,9 +2,12 @@ package fix.client.api.common.enums;
 
 public enum FixConnectionStatus {
     CREATED,
-    STARTING_BY_CLIENT,
+    TRY_TO_STARTING,
     STOP_BY_SYSTEM,
-    STOP_BY_CLIENT,
+    TRY_TO_STOPPING,
     OPEN,
-    LOG_ON
+    LOG_ON,
+    LOG_OUT,
+    CONNECTED,
+    DISCONNECTED,
 }

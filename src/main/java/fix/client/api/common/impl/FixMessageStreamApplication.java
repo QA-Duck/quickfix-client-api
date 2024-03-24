@@ -1,20 +1,21 @@
 package fix.client.api.common.impl;
 
 import fix.client.api.sessions.events.FixConnectionStatusUpdateEvent;
-import fix.client.api.subscriptions.models.FixSessionSubscriber;
+import fix.client.api.sessions.events.FixConnectionErrorEvent;
+import fix.client.api.subscriptions.events.SubscriptionMessageReceivedEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.codec.ServerSentEvent;
 import quickfix.*;
 
-import java.util.ArrayList;
+
+import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static fix.client.api.common.enums.FixConnectionStatus.*;
+import static quickfix.Session.lookupSession;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,48 +26,47 @@ public class FixMessageStreamApplication implements Application {
     @Getter
     private final ApplicationEventPublisher eventPublisher;
 
-    private final Set<FixSessionSubscriber> subscribers = new HashSet<>();
-
-    private final List<String> lastMessages = new ArrayList<>();
-
-    public void addSubscriber(FixSessionSubscriber subscriber) {
-        subscribers.add(subscriber);
-        lastMessages.forEach(m -> pushMessage(subscriber, m));
-    }
-
-    public void delSubscriber(String subscribeID) {
-        subscribers
-                .stream()
-                .filter(subscriber -> subscriber.getProperties().getSubscriptionID().equals(subscribeID))
-                .findFirst()
-                .ifPresent((subscribers::remove));
-    }
+    @Getter
+    private final Set<Session> lookupSessions = new HashSet<>();
 
     @Override
     public void onCreate(SessionID sessionID) {
-        Session.lookupSession(sessionID).addStateListener(new SessionStateListener() {
+        lookupSession(sessionID).addStateListener(new SessionStateListener() {
             @Override
             public void onConnectException(Exception exception) {
-                var message = exception.getMessage();
-                lastMessages.add(message);
-                pushMessage(message);
-                pushMessage("The connection will be interrupted [check session configuration]");
-                subscribers.forEach(subscriber -> subscriber.getStream().complete());
                 eventPublisher.publishEvent(
-                        new FixConnectionStatusUpdateEvent(fixSessionID, STOP_BY_SYSTEM)
+                        new FixConnectionErrorEvent(exception, fixSessionID)
+                );
+            }
+
+            @Override
+            public void onConnect() {
+                eventPublisher.publishEvent(
+                        new FixConnectionStatusUpdateEvent(fixSessionID, CONNECTED)
+                );
+            }
+
+            @Override
+            public void onDisconnect() {
+                eventPublisher.publishEvent(
+                        new FixConnectionStatusUpdateEvent(fixSessionID, DISCONNECTED)
                 );
             }
         });
     }
 
     @Override
-    public void onLogon(SessionID sessionID) {
-        eventPublisher.publishEvent(new FixConnectionStatusUpdateEvent(fixSessionID, OPEN));
+    public void onLogon(SessionID sessionId) {
+        eventPublisher.publishEvent(
+                new FixConnectionStatusUpdateEvent(fixSessionID, LOG_ON)
+        );
     }
 
     @Override
     public void onLogout(SessionID sessionID) {
-
+        eventPublisher.publishEvent(
+                new FixConnectionStatusUpdateEvent(fixSessionID, LOG_OUT)
+        );
     }
 
     @Override
@@ -89,20 +89,8 @@ public class FixMessageStreamApplication implements Application {
         pushMessage(message);
     }
 
-    public void pushMessage(Message message) {
-        String className = message.getClass().getSimpleName();
-        String messageRaw = message.toRawString().replace('\u0001', '|');
-        String messageText = className + " " + messageRaw;
-        pushMessage(messageText);
-    }
-
-    public void pushMessage(String message) {
-        subscribers.forEach(s -> pushMessage(s, message));
-    }
-
-    public void pushMessage(FixSessionSubscriber subscriber, String message) {
-        var sse = ServerSentEvent.builder(message).build();
-        subscriber.getStream().next(sse);
+    private void pushMessage(Message message) {
+        eventPublisher.publishEvent(new SubscriptionMessageReceivedEvent(message, fixSessionID));
     }
 }
 

@@ -2,6 +2,7 @@ package fix.client.api.sessions.controllers;
 
 import fix.client.api.sessions.models.FixConnectionProperties;
 import fix.client.api.sessions.models.FixSessionCreateRequest;
+import fix.client.api.sessions.store.FixConnectionStore;
 import lombok.extern.slf4j.Slf4j;
 
 import fix.client.api.sessions.models.FixSessionProperties;
@@ -12,30 +13,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static fix.client.api.common.enums.FixConnectionStatus.STOP_BY_CLIENT;
-
 
 @Slf4j
 @RestController
 @RequestMapping("/sessions")
 public class FixSessionController {
 
+    private final FixConnectionStore fixConnectionStore;
     private final FixConnectionService fixConnectionService;
     private final FixSessionMapRepository fixSessionMapRepository;
 
     @Autowired
     public FixSessionController(
+            FixConnectionStore fixConnectionStore,
             FixConnectionService fixConnectionService,
             FixSessionMapRepository fixSessionMapRepository
 
     ) {
+        this.fixConnectionStore = fixConnectionStore;
         this.fixConnectionService = fixConnectionService;
         this.fixSessionMapRepository = fixSessionMapRepository;
     }
 
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody FixSessionCreateRequest request) {
-        return ResponseEntity.ok(fixConnectionService.create(
+        return ResponseEntity.ok(fixConnectionStore.create(
                 new FixSessionProperties(
                         request.name(),
                         new FixConnectionProperties(
@@ -66,7 +68,7 @@ public class FixSessionController {
 
     @GetMapping("/disconnect/{id}")
     public ResponseEntity<?> disconnect(@PathVariable String id) {
-        fixConnectionService.disconnect(id, STOP_BY_CLIENT);
+        fixConnectionService.disconnect(id);
         return ResponseEntity.ok("ok");
     }
 }
