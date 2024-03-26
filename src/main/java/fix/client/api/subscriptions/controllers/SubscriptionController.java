@@ -1,9 +1,7 @@
 package fix.client.api.subscriptions.controllers;
 
-import fix.client.api.common.enums.FixConnectionStatus;
 import fix.client.api.repositories.FixSessionMapRepository;
 import fix.client.api.repositories.FixSubscriberMapRepository;
-import fix.client.api.sessions.services.FixConnectionService;
 import fix.client.api.subscriptions.services.FixSubscriberService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-
-import static fix.client.api.common.enums.FixConnectionStatus.OPEN;
 
 
 @Slf4j
@@ -44,6 +40,11 @@ public class SubscriptionController {
     @GetMapping("/select/{subscriberID}")
     public ResponseEntity<?> select(@PathVariable String subscriberID) {
         return ResponseEntity.ok(fixSubscriberMapRepository.select(subscriberID));
+    }
+
+    @GetMapping("/select/session/{sessionID}")
+    public ResponseEntity<?> selectBySessionID(@PathVariable String sessionID) {
+        return ResponseEntity.ok(fixSubscriberMapRepository.selectBySessionID(sessionID));
     }
 
     @GetMapping(path = "/subscribe/{subscriberID}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
