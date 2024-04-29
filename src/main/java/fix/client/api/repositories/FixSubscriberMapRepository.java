@@ -5,6 +5,9 @@ import fix.client.api.common.enums.FixSubscriberStatus;
 import fix.client.api.subscriptions.models.FixSessionSubscriberProperties;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class FixSubscriberMapRepository extends BaseMapRepository<FixSessionSubscriberProperties> {
     public FixSessionSubscriberProperties updateStatus(
@@ -15,5 +18,12 @@ public class FixSubscriberMapRepository extends BaseMapRepository<FixSessionSubs
         entity.setStatus(status);
         update(entity);
         return entity;
+    }
+
+    public List<FixSessionSubscriberProperties> selectBySessionID(String sessionID) {
+        return select()
+                .stream()
+                .filter(s -> s.getSessionID().equals(sessionID))
+                .collect(Collectors.toList());
     }
 }
