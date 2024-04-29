@@ -46,6 +46,17 @@ public class SubscriptionController {
         return ResponseEntity.ok(fixSubscriberMapRepository.select(subscriberID));
     }
 
+    @GetMapping("/select/session/{sessionID}")
+    public ResponseEntity<?> selectBySession(@PathVariable String sessionID)
+    {
+        return ResponseEntity.ok(fixSubscriberMapRepository
+                .select()
+                .stream()
+                .filter(s -> s.getSessionID().equals(sessionID))
+                .toList()
+        );
+    }
+
     @GetMapping(path = "/subscribe/{subscriberID}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> subscribe(@PathVariable String subscriberID) {
          return Flux.create(sink ->
